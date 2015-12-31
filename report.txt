@@ -1,0 +1,107 @@
+Assignment 3 Report
+
+Name: Vaibhav Behl
+
+
+
+1. What I turned in, what it does, and how to run it
+
+Below is the directory structure the program assumes(relative path references)
+.
+├── src
+|   └── <all *code* files here>
+└── data
+    ├── train
+    |   └── <only 1076 *train.csv* files here, delete all hidden files>
+    └── test
+        └── <only 50 *test.csv* files here, delete all hidden files>
+
+(Special Note*) - The .OUT files may have an extra empty line at the end so may need some adjusting while comparing to the original test.
+
+Code Files
+----------
+* create_train_test_files.sh : This shell script will use either create_baseline_features.py or create_advanced_features.py and iterate over all applicable files to generate a single file train/test for the respective Baseline/Advanced case.
+    (code sample) :
+    /src$ sh create_train_test_files.sh baseline train
+    /src$ sh create_train_test_files.sh advanced train
+    /src$ sh create_train_test_files.sh baseline test
+    /src$ sh create_train_test_files.sh advanced test
+
+* create_baseline_features.py : Takes as an argument one CSV file and prints to STDOUT the file in 'Baseline' CRFS format
+    (code sample) : create_baseline_features.py CSV_file_name > CSV_CRFS_format
+
+* create_advanced_features.py : Takes as an argument one CSV file and prints to STDOUT the file in 'Advanced' CRFS format
+    (code sample) : create_baseline_features.py CSV_file_name > CSV_CRFS_format
+
+* do_k_fold_cv.py : Will do k-fold validation manually(not using crfsuite's). All intermediate files(train/model/test/output) will be placed in the (./cv) directory.
+    (code sample) : python3 do_k_fold_cv.py 4 create_advanced_features.py ../data/train metrics.txt
+    Here param1 is k, param2 is which format to use(baseline/advanced), param3 is train data location, param4 is metrics file
+    
+* hw3_corpus_tool.py : No major modifications made, other than some code refactoring to remove warnings.
+
+* output_feature_frequency.py : (internal use) Used only for debugging pusposes, see doc for more details.
+
+* output_results.py : To find accuracy given two files with same rows.
+
+How to Run
+----------
+After generating the respective train/test files for baseline/advanced using create_train_test_files.sh, run the files in following way:
+    (code sample) :
+    - Baseline
+    /src$ ./crfsuite learn -m swbdDAMSL.crfsuite.baseline.model swbdDAMSL.crfsuite.baseline.train
+    /src$ ./crfsuite tag -m swbdDAMSL.crfsuite.baseline.model swbdDAMSL.crfsuite.baseline.test > swbdDAMSL.crfsuite.baseline.out
+    - Advanced
+    /src$ ./crfsuite learn -m swbdDAMSL.crfsuite.advanced.model swbdDAMSL.crfsuite.advanced.train
+    /src$ ./crfsuite tag -m swbdDAMSL.crfsuite.advanced.model swbdDAMSL.crfsuite.advanced.test > swbdDAMSL.crfsuite.advanced.out
+
+
+
+2. How I evaluated my baseline and advanced features
+
+- Baseline Evaluation: This was evaluated using k-fold, with k set to 2,3,4. Four features were extracted out of the labelled data according to the specification of the assignment. An average accuracy of 72% was observed on the hold-out set which varied by +-(0.5%).
+
+- Advanced Evaluation: Advanced feature were selected by making changes to the original feature set and then measuring performance using k-fold validation, with k set to 2,3,4. Various types of feature vectors were tried and their performance evaluated on the hold-out set. The average accuracy of 74.5% was observed on the hold-out set which varied by +-(0.5%).
+
+
+
+3. Description of advanced feature set
+
+Following are the final features contained in the advanced feature set which was giving the maximum average accuracy on the hold-out set.
+
+* 'someone continues to speak' : So after the Speaker_Changed(S_C) event, this one will measure for how long one person has been continuously speaking.For eg., possible values could be- D2, D3, D4, and so on.
+
+* 'last utterance' : Similar to first utterance for basic feature, this is used to mark the ending of a conversation with (L_U)
+
+* 'Remove POS_. and POS_,' : removing POS tags having only . or ,
+
+* 'using Text when POS is None'
+
+* 'First/Last Token' : The first and the last tokens are marked using an additional (F_) and (L_) to designate their importance.
+
+* 'First/Last POS' : The first and the last POS tags are marked using an additional (F_) and (L_) to designate their importance.
+
+
+
+4. How I developed my advanced feature set
+
+I started with some basic changes to the baseline features which I thought would improve the performance. Some changes made improved the performance, other decreased it. This performance was measured on the hold-out data set using k-fold. This process was mostly based on intuition and was very time intensive! 
+
+To get some meaningful feedback from k-fold CV, I made some scripts to analyze results and get feedback.
+- output_results.py: this scripts apart from telling accuracy %, also prints out a list of top 10 mismatches between actual tag and predicted tag.
+- output_feature_frequency.py: given a CRFS format file, this script will generate a frequency map of token/POS for each act_tag.
+Analyzing the output of these two files together provides us insight into what are the major contributions to the error we see.
+
+Apart from the advanced features mentioned above, I also tried various combinations of using bi-grams and tri-grams, but, each time their contribution actually decreased the accuracy on the hold-out set, compared to just using the set of advance features mentioned above. All the code for bigrams and trigrams is still in the 'create_advanced_features.py' but is commented out because they don't form part of the final set of advance features.
+
+
+
+5. Results
+
+Replace Xs with actual results.
+
+Accuracy of baseline features: 72.27% (average) on Hold-out data
+Accuracy of advanced features: 74.48% (average) on Hold-out data
+
+6. Additional information about the assignment
+
+Not applicable (replace this text as necessary).

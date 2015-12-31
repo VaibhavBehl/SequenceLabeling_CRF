@@ -1,0 +1,1 @@
+Assigned dialogue acts to sequences of utterances in conversations from Switchboard (SWBD) corpus. Created two sets of features- Basic and Advanced, from this dataset, and used these with CRF to train and predict the dialog acts. Refer to 'Problem_Statement.txt' and 'report.txt' for more information.
